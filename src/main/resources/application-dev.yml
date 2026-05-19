@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/classservice
+    username: classservice
+    password: classservice
+
+  jpa:
+    show-sql: true
+
+  flyway:
+    locations: classpath:db/migration
+
+logging:
+  level:
+    com.classservice: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE

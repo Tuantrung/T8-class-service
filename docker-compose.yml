@@ -1,0 +1,49 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: classservice-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: classservice
+      POSTGRES_USER: classservice
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-classservice}
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U classservice -d classservice']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: classservice-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/classservice
+      DB_USERNAME: classservice
+      DB_PASSWORD: ${DB_PASSWORD:-classservice}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-32-chars!}
+      JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS:-8}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      PDF_EXPORT_DIR: /app/pdf-exports
+    ports:
+      - '8080:8080'
+    volumes:
+      - pdf-exports:/app/pdf-exports
+
+volumes:
+  pgdata:
+    driver: local
+  pdf-exports:
+    driver: local
