@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,6 +33,7 @@ import java.util.zip.ZipOutputStream;
 @RestController
 @RequestMapping("/api/bills")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class BillController {
 
     private final BillService billService;

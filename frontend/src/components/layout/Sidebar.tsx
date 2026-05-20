@@ -1,14 +1,18 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../lib/utils'
+import { useAuthStore } from '../../store/authStore'
 
-const navItems = [
-  { to: '/', label: 'Dashboard', end: true },
-  { to: '/classes', label: 'Lớp học' },
-  { to: '/students', label: 'Học sinh' },
-  { to: '/billing', label: 'Học phí' },
+const baseNavItems = [
+  { to: '/', label: 'Dashboard', end: true, adminOnly: false },
+  { to: '/classes', label: 'Lớp học', end: false, adminOnly: false },
+  { to: '/students', label: 'Học sinh', end: false, adminOnly: false },
+  { to: '/billing', label: 'Học phí', end: false, adminOnly: true },
 ]
 
 export default function Sidebar() {
+  const role = useAuthStore((s) => s.user?.role)
+  const navItems = baseNavItems.filter((item) => !item.adminOnly || role === 'ADMIN')
+
   return (
     <aside className="w-56 bg-white shadow-sm border-r border-gray-200 flex flex-col" aria-label="Điều hướng chính">
       <div className="p-4 border-b border-gray-200">
