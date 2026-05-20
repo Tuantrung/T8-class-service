@@ -23,6 +23,12 @@ function AuthGuard() {
   )
 }
 
+function AdminGuard() {
+  const role = useAuthStore((s) => s.user?.role)
+  if (role !== 'ADMIN') return <Navigate to="/" replace />
+  return <Outlet />
+}
+
 export const router = createBrowserRouter([
   {
     path: '/login',
@@ -43,8 +49,13 @@ export const router = createBrowserRouter([
       { path: 'students/:id', element: <StudentDetailPage /> },
       { path: 'sessions/:id', element: <SessionDetailPage /> },
       { path: 'grades', element: <GradesPage /> },
-      { path: 'billing', element: <BillingPage /> },
-      { path: 'billing/:id', element: <BillDetailPage /> },
+      {
+        element: <AdminGuard />,
+        children: [
+          { path: 'billing', element: <BillingPage /> },
+          { path: 'billing/:id', element: <BillDetailPage /> },
+        ],
+      },
     ],
   },
 ])

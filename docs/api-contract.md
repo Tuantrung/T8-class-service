@@ -317,6 +317,7 @@ interface StudentDto {
   phone: string | null;
   parentPhone: string | null;
   notes: string | null;
+  schoolName: string | null;  // added V6 migration
   createdAt: string;
 }
 ```
@@ -384,6 +385,7 @@ interface CreateStudentRequest {
   phone?: string;
   parentPhone?: string;
   notes?: string;
+  schoolName?: string;     // added V6 migration
 }
 ```
 
@@ -482,10 +484,11 @@ interface SessionDto {
   id: string;
   classId: string;
   className: string;
-  sessionDate: string;     // ISO date "YYYY-MM-DD"
+  sessionDate: string;      // ISO date "YYYY-MM-DD"
   startTime: string | null; // "HH:mm"
   endTime: string | null;
   topic: string | null;
+  progressNotes: string | null; // teaching content description — added V6 migration
   cancelledByTeacher: boolean;
   attendanceCount: number;  // number of PRESENT students
   totalStudents: number;
@@ -556,6 +559,7 @@ interface UpdateSessionRequest {
   startTime?: string;
   endTime?: string;
   topic?: string;
+  progressNotes?: string;  // teaching content description — added V6 migration
   cancelledByTeacher: boolean;
 }
 ```
@@ -811,12 +815,54 @@ Delete a grade entry.
 
 ---
 
+### POST /api/grades/import
+Import grades from an Excel file for a specific exam. File columns: `Họ tên | Điểm`. Row 0 is the header and is skipped. Matches students by full name (case-insensitive) within the enrolled class. Creates a new grade if none exists for the (classId, studentId, examName) combo; otherwise updates the existing score.
+
+**Auth:** Required (ADMIN or TEACHER who owns the class)
+
+**Query params:**
+- `classId` — required, UUID
+- `examName` — required, string
+- `examDate` — optional, ISO date `YYYY-MM-DD`
+
+**Request:** `multipart/form-data`, field `file` (.xlsx)
+
+**Response 200:**
+```typescript
+interface GradeImportResult {
+  imported: number;  // new grade records created
+  updated: number;   // existing grade records updated
+  skipped: number;   // blank rows skipped
+  errors: { rowNumber: number; message: string }[];
+}
+```
+
+**Errors:** 400 (empty/unreadable file), 404 (class not found)
+
+---
+
+### GET /api/grades/import/template
+Download an Excel template pre-filled with enrolled student names for grade import.
+
+**Auth:** Required
+
+**Query params:**
+- `classId` — required, UUID
+
+**Response 200:** `.xlsx` file — `Content-Disposition: attachment; filename="grade-template.xlsx"`
+
+Columns: `Họ tên | Điểm`
+
+---
+
 ## /bills
+
+> **All `/api/bills/**` endpoints require `ADMIN` role.** Teachers do not have access to billing data (enforced via `@PreAuthorize("hasRole('ADMIN')")` on `BillController`).
 
 ### GET /api/bills
 List bills for the current tenant.
 
-**Auth:** Required
+**Auth:** Required (ADMIN only)
 
 **Query params:**
 - `month` — required, format `YYYY-MM` (e.g. `2024-03`)
@@ -850,7 +896,7 @@ interface BillDto {
 ### POST /api/bills/generate
 Generate (or regenerate) bills for all students in a class for a given month.
 
-**Auth:** Required (ADMIN or TEACHER who owns the class)
+**Auth:** Required (ADMIN only)
 
 **Request:**
 ```typescript
@@ -883,7 +929,7 @@ interface GenerateBillsResult {
 ### GET /api/bills/{billId}
 Get a single bill with line-item session detail.
 
-**Auth:** Required
+**Auth:** Required (ADMIN only)
 
 **Response 200:**
 ```typescript
@@ -924,7 +970,7 @@ interface UpdateBillStatusRequest {
 ### GET /api/bills/{billId}/pdf
 Export a bill as a PDF.
 
-**Auth:** Required
+**Auth:** Required (ADMIN only)
 
 **Response 200:**
 - `Content-Type: application/pdf`

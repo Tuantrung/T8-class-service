@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useClass } from '../../hooks/useClasses'
+import { useAuthStore } from '../../store/authStore'
 import { PageSpinner } from '../../components/ui/Spinner'
 import { StatusBadge } from '../../components/ui/Badge'
 import { formatCurrency } from '../../lib/utils'
@@ -11,16 +12,18 @@ import ClassBillingTab from './tabs/ClassBillingTab'
 
 type Tab = 'students' | 'sessions' | 'grades' | 'billing'
 
-const tabs: { id: Tab; label: string }[] = [
+const allTabs: { id: Tab; label: string; adminOnly?: boolean }[] = [
   { id: 'students', label: 'Học sinh' },
   { id: 'sessions', label: 'Buổi học' },
   { id: 'grades', label: 'Điểm số' },
-  { id: 'billing', label: 'Học phí' },
+  { id: 'billing', label: 'Học phí', adminOnly: true },
 ]
 
 export default function ClassDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const role = useAuthStore((s) => s.user?.role)
+  const tabs = allTabs.filter((t) => !t.adminOnly || role === 'ADMIN')
   const [activeTab, setActiveTab] = useState<Tab>('students')
 
   const { data: cls, isLoading, isError } = useClass(id!)

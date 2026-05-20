@@ -87,6 +87,7 @@ export interface StudentDto {
   phone?: string
   parentPhone?: string
   notes?: string
+  schoolName?: string
   createdAt: string
 }
 
@@ -95,6 +96,7 @@ export interface CreateStudentRequest {
   phone?: string
   parentPhone?: string
   notes?: string
+  schoolName?: string
 }
 
 export interface ImportError {
@@ -118,6 +120,7 @@ export interface SessionDto {
   startTime?: string
   endTime?: string
   topic?: string
+  progressNotes?: string
   cancelledByTeacher: boolean
   attendanceCount?: number
   totalStudents?: number
@@ -154,6 +157,7 @@ export interface UpdateSessionRequest {
   startTime?: string
   endTime?: string
   topic?: string
+  progressNotes?: string
   cancelledByTeacher: boolean
 }
 
@@ -214,6 +218,13 @@ export interface CreateGradeRequest {
   score?: number
   maxScore?: number
   notes?: string
+}
+
+export interface GradeImportResult {
+  imported: number
+  updated: number
+  skipped: number
+  errors: { rowNumber: number; message: string }[]
 }
 
 // Billing

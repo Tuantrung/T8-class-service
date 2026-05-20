@@ -4,7 +4,9 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /build
 
-# Copy Maven wrapper and pom.xml first to cache dependencies
+RUN apk add --no-cache maven
+
+# Copy pom.xml first to cache dependencies
 COPY pom.xml .
 RUN mkdir -p /root/.m2
 

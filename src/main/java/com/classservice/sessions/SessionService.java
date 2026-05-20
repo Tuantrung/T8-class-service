@@ -147,6 +147,7 @@ public class SessionService {
         if (req.startTime() != null) session.setStartTime(req.startTime());
         if (req.endTime() != null) session.setEndTime(req.endTime());
         if (req.topic() != null) session.setTopic(req.topic());
+        if (req.progressNotes() != null) session.setProgressNotes(req.progressNotes());
         if (req.cancelledByTeacher() != null) session.setCancelledByTeacher(req.cancelledByTeacher());
         return SessionDto.from(sessionRepository.save(session));
     }

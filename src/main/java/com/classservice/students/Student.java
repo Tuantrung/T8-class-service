@@ -39,6 +39,9 @@ public class Student extends TenantEntity {
 
     private String notes;
 
+    @Column(name = "school_name")
+    private String schoolName;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 }

@@ -16,6 +16,7 @@ const sessionSchema = z.object({
   startTime: z.string().optional(),
   endTime: z.string().optional(),
   topic: z.string().optional(),
+  progressNotes: z.string().optional(),
   cancelledByTeacher: z.boolean(),
 })
 
@@ -58,6 +59,7 @@ export default function SessionDetailPage() {
       startTime: session.startTime ?? '',
       endTime: session.endTime ?? '',
       topic: session.topic ?? '',
+      progressNotes: session.progressNotes ?? '',
       cancelledByTeacher: session.cancelledByTeacher,
     })
 
@@ -229,6 +231,19 @@ export default function SessionDetailPage() {
                 id="sess-topic"
                 {...register('topic')}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="sess-progress" className="block text-sm font-medium text-gray-700 mb-1">
+                Tiến trình buổi học
+              </label>
+              <textarea
+                id="sess-progress"
+                {...register('progressNotes')}
+                rows={3}
+                placeholder="Mô tả nội dung đã dạy trong buổi học..."
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>
 
