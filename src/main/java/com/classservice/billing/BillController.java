@@ -65,7 +65,8 @@ public class BillController {
     public ResponseEntity<byte[]> downloadPdf(@PathVariable UUID id) {
         BillDetailDto bill = billService.getBillDetail(id);
         byte[] pdf = pdfExportService.generateBillPdf(bill);
-        String filename = "hoc-phi-" + bill.billingMonth() + "-" + bill.studentName().replaceAll("\\s+", "-") + ".pdf";
+        String safeName = bill.studentName().replaceAll("[^A-Za-z0-9._-]", "-");
+        String filename = "hoc-phi-" + bill.billingMonth() + "-" + safeName + ".pdf";
         return ResponseEntity.ok()
             .contentType(MediaType.APPLICATION_PDF)
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")

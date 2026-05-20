@@ -39,6 +39,7 @@ import java.util.UUID;
 public class ClassController {
 
     private final ClassService classService;
+    private final com.classservice.students.StudentService studentService;
 
     /**
      * List all classes for the current tenant, with pagination.
@@ -116,5 +117,17 @@ public class ClassController {
             @PathVariable UUID studentId) {
         classService.removeStudent(classId, studentId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Import students from Excel file and enroll them into a class.
+     * Matches the frontend URL: POST /api/classes/{classId}/students/import
+     */
+    @PostMapping(value = "/{classId}/students/import", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<com.classservice.students.dto.ImportResult>> importStudents(
+            @PathVariable UUID classId,
+            @org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        com.classservice.students.dto.ImportResult result = studentService.importStudents(file);
+        return ResponseEntity.ok(ApiResponse.ok(result));
     }
 }

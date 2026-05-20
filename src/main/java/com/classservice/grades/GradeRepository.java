@@ -12,13 +12,15 @@ import java.util.UUID;
 @Repository
 public interface GradeRepository extends JpaRepository<Grade, UUID> {
 
-    List<Grade> findByClassIdAndStudentId(UUID classId, UUID studentId);
+    Optional<Grade> findByIdAndTenantId(UUID id, UUID tenantId);
 
-    Page<Grade> findByClassIdAndStudentId(UUID classId, UUID studentId, Pageable pageable);
+    List<Grade> findByClassIdAndTenantId(UUID classId, UUID tenantId);
 
-    List<Grade> findByClassId(UUID classId);
+    List<Grade> findByClassIdAndStudentIdAndTenantId(UUID classId, UUID studentId, UUID tenantId);
 
-    Page<Grade> findByClassId(UUID classId, Pageable pageable);
+    Page<Grade> findByClassIdAndTenantId(UUID classId, UUID tenantId, Pageable pageable);
+
+    Page<Grade> findByClassIdAndStudentIdAndTenantId(UUID classId, UUID studentId, UUID tenantId, Pageable pageable);
 
     Optional<Grade> findByClassIdAndStudentIdAndExamName(UUID classId, UUID studentId, String examName);
 }

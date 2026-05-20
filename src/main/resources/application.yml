@@ -39,7 +39,7 @@ server:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:dev-secret-key-32-characters-min!}
+    secret: ${JWT_SECRET}
     expiry-hours: ${JWT_EXPIRY_HOURS:8}
   pdf:
     export-dir: ${PDF_EXPORT_DIR:/tmp/pdf-exports}

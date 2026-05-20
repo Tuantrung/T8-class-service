@@ -14,7 +14,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance, UUID> {
 
     Optional<Attendance> findBySessionIdAndStudentId(UUID sessionId, UUID studentId);
 
+    Optional<Attendance> findByIdAndTenantId(UUID id, UUID tenantId);
+
     void deleteBySessionIdAndStudentId(UUID sessionId, UUID studentId);
 
     List<Attendance> findByStudentIdAndSessionIdIn(UUID studentId, List<UUID> sessionIds);
+
+    boolean existsBySessionId(UUID sessionId);
 }

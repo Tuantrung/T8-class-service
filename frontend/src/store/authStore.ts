@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { UserDto } from '../api/types'
+import { tokenStore } from '../api/tokenStore'
 
 interface AuthState {
   token: string | null
@@ -13,14 +14,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
 
   setAuth: (token, user) => {
-    // Keep token in memory AND expose on window for the Axios interceptor
-    // (avoids circular import between store and client.ts)
-    ;(window as unknown as Record<string, unknown>).__authToken = token
+    tokenStore.set(token)
     set({ token, user })
   },
 
   clearAuth: () => {
-    ;(window as unknown as Record<string, unknown>).__authToken = null
+    tokenStore.set(null)
     set({ token: null, user: null })
   },
 }))

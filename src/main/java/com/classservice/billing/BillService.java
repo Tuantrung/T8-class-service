@@ -89,8 +89,8 @@ public class BillService {
             ))
             .toList();
 
-        String billingMonthStr = bill.getBillingMonth().getYear() + "-"
-            + String.format("%02d", bill.getBillingMonth().getMonthValue());
+        String billingMonthStr = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM")
+            .format(bill.getBillingMonth());
 
         return new BillDetailDto(
             bill.getId(),
@@ -111,7 +111,12 @@ public class BillService {
 
     public List<BillDto> listBillsByMonth(String month, UUID classId) {
         UUID tenantId = TenantContext.get();
-        LocalDate billingMonth = LocalDate.parse(month + "-01");
+        LocalDate billingMonth;
+        try {
+            billingMonth = java.time.YearMonth.parse(month).atDay(1);
+        } catch (java.time.format.DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid month format. Expected YYYY-MM, got: " + month);
+        }
         List<Bill> bills = classId != null
             ? billRepository.findByTenantIdAndClassIdAndBillingMonth(tenantId, classId, billingMonth)
             : billRepository.findByTenantIdAndBillingMonth(tenantId, billingMonth);
@@ -204,8 +209,8 @@ public class BillService {
         Bill bill = billRepository.findByIdAndTenantId(billId, tenantId)
             .orElseThrow(() -> new EntityNotFoundException("Bill", billId));
 
-        if (bill.getStatus() == BillStatus.PAID) {
-            throw new BillAlreadyIssuedException("Cannot change status of a PAID bill");
+        if (bill.getStatus() == BillStatus.PAID || bill.getStatus() == BillStatus.ISSUED) {
+            throw new BillAlreadyIssuedException("Cannot change status of an ISSUED or PAID bill");
         }
 
         bill.setStatus(req.status());

@@ -46,6 +46,9 @@ public class SessionService {
      * @return paginated list of SessionDto
      */
     public PageResponse<SessionDto> listByClass(UUID classId, LocalDate from, LocalDate to, Pageable pageable) {
+        UUID tenantId = TenantContext.get();
+        classRepository.findByIdAndTenantId(classId, tenantId)
+            .orElseThrow(() -> new EntityNotFoundException("TutoringClass", classId));
         if (from != null && to != null) {
             return PageResponse.from(
                 sessionRepository.findByClassIdAndSessionDateBetween(classId, from, to, pageable)
@@ -63,6 +66,9 @@ public class SessionService {
      * @return list of SessionDto ordered by date descending
      */
     public List<SessionDto> listByClass(UUID classId) {
+        UUID tenantId = TenantContext.get();
+        classRepository.findByIdAndTenantId(classId, tenantId)
+            .orElseThrow(() -> new EntityNotFoundException("TutoringClass", classId));
         return sessionRepository.findByClassIdOrderBySessionDateDesc(classId)
             .stream().map(SessionDto::from).toList();
     }
@@ -155,6 +161,10 @@ public class SessionService {
         UUID tenantId = TenantContext.get();
         Session session = sessionRepository.findByIdAndTenantId(sessionId, tenantId)
             .orElseThrow(() -> new EntityNotFoundException("Session", sessionId));
+        if (attendanceRepository.existsBySessionId(sessionId)) {
+            throw new com.classservice.common.exception.DuplicateResourceException(
+                "Cannot delete session with existing attendance records");
+        }
         sessionRepository.delete(session);
         log.info("Session {} deleted from tenant {}", sessionId, tenantId);
     }
