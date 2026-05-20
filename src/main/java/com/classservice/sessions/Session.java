@@ -45,8 +45,10 @@ public class Session extends TenantEntity {
 
     private String topic;
 
+    @Column(name = "progress_notes", columnDefinition = "TEXT")
+    private String progressNotes;
+
     @Column(name = "cancelled_by_teacher", nullable = false)
-    
     private boolean cancelledByTeacher = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)

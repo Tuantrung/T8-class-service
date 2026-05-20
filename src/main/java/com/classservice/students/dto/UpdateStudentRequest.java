@@ -4,5 +4,6 @@ public record UpdateStudentRequest(
     String fullName,
     String phone,
     String parentPhone,
-    String notes
+    String notes,
+    String schoolName
 ) {}

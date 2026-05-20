@@ -8,5 +8,6 @@ public record UpdateSessionRequest(
     LocalTime startTime,
     LocalTime endTime,
     String topic,
+    String progressNotes,
     Boolean cancelledByTeacher
 ) {}

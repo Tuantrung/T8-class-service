@@ -6,5 +6,6 @@ public record CreateStudentRequest(
     @NotBlank String fullName,
     String phone,
     String parentPhone,
-    String notes
+    String notes,
+    String schoolName
 ) {}

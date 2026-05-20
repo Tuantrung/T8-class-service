@@ -12,10 +12,11 @@ public record StudentDto(
     String phone,
     String parentPhone,
     String notes,
+    String schoolName,
     Instant createdAt
 ) {
     public static StudentDto from(Student s) {
         return new StudentDto(s.getId(), s.getTenantId(), s.getFullName(),
-            s.getPhone(), s.getParentPhone(), s.getNotes(), s.getCreatedAt());
+            s.getPhone(), s.getParentPhone(), s.getNotes(), s.getSchoolName(), s.getCreatedAt());
     }
 }
