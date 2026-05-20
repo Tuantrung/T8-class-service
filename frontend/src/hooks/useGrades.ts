@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { gradesApi } from '../api/endpoints/grades'
 import type { CreateGradeRequest } from '../api/types'
+import { downloadBlob } from '../lib/utils'
 
 export function useGrades(classId: string, studentId?: string) {
   return useQuery({
@@ -37,6 +38,26 @@ export function useDeleteGrade(classId: string) {
     mutationFn: (id: string) => gradesApi.delete(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['grades', classId] })
+    },
+  })
+}
+
+export function useImportGrades(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ examName, examDate, file }: { examName: string; examDate?: string; file: File }) =>
+      gradesApi.importGrades(classId, examName, examDate, file),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['grades', classId] })
+    },
+  })
+}
+
+export function useDownloadGradeTemplate(classId: string) {
+  return useMutation({
+    mutationFn: () => gradesApi.downloadTemplate(classId),
+    onSuccess: (blob) => {
+      downloadBlob(blob, 'grade-template.xlsx')
     },
   })
 }
