@@ -127,7 +127,7 @@ public class ClassController {
     public ResponseEntity<ApiResponse<com.classservice.students.dto.ImportResult>> importStudents(
             @PathVariable UUID classId,
             @org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
-        com.classservice.students.dto.ImportResult result = studentService.importStudents(file);
+        com.classservice.students.dto.ImportResult result = studentService.importStudentsToClass(classId, file);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 }

@@ -1,5 +1,7 @@
 package com.classservice.students;
 
+import com.classservice.classes.ClassStudent;
+import com.classservice.classes.ClassStudentRepository;
 import com.classservice.common.TenantContext;
 import com.classservice.common.exception.ExcelParseException;
 import com.classservice.students.dto.ImportError;
@@ -34,6 +36,7 @@ import java.util.UUID;
 public class ExcelImportService {
 
     private final StudentRepository studentRepository;
+    private final ClassStudentRepository classStudentRepository;
 
     /**
      * Parse and import students from an .xlsx file.
@@ -97,6 +100,71 @@ public class ExcelImportService {
         }
 
         log.info("Excel import complete: imported={}, skipped={}, errors={}", imported, skipped, errors.size());
+        return new ImportResult(imported, skipped, errors);
+    }
+
+    /**
+     * Import students from an Excel file and immediately enroll them into the given class.
+     * Students that are already enrolled are silently skipped (no duplicate entry).
+     */
+    @Transactional
+    public ImportResult importStudents(MultipartFile file, UUID classId) {
+        if (file == null || file.isEmpty()) {
+            throw new ExcelParseException("Uploaded file is empty");
+        }
+
+        int imported = 0;
+        int skipped = 0;
+        List<ImportError> errors = new ArrayList<>();
+        UUID tenantId = TenantContext.get();
+
+        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+
+            for (int rowIdx = 1; rowIdx <= sheet.getLastRowNum(); rowIdx++) {
+                Row row = sheet.getRow(rowIdx);
+
+                if (row == null || isBlankRow(row)) {
+                    skipped++;
+                    continue;
+                }
+
+                String fullName = getCellValue(row, 0);
+                if (fullName == null || fullName.isBlank()) {
+                    errors.add(new ImportError(rowIdx + 1, "Full Name is required"));
+                    continue;
+                }
+
+                String phone = getCellValue(row, 1);
+                String parentPhone = getCellValue(row, 2);
+                String notes = getCellValue(row, 3);
+
+                Student student = Student.builder()
+                    .tenantId(tenantId)
+                    .fullName(fullName.trim())
+                    .phone(phone)
+                    .parentPhone(parentPhone)
+                    .notes(notes)
+                    .createdAt(Instant.now())
+                    .build();
+                Student saved = studentRepository.save(student);
+
+                // Enroll into the class (skip if already enrolled)
+                ClassStudent.ClassStudentId csId = new ClassStudent.ClassStudentId(classId, saved.getId());
+                if (!classStudentRepository.existsById(csId)) {
+                    classStudentRepository.save(
+                        ClassStudent.builder().id(csId).enrolledAt(Instant.now()).build());
+                }
+
+                imported++;
+            }
+        } catch (IOException ex) {
+            log.error("Failed to read Excel file for tenant {}: {}", tenantId, ex.getMessage());
+            throw new ExcelParseException("Failed to read Excel file: " + ex.getMessage());
+        }
+
+        log.info("Excel import+enroll for class {}: imported={}, skipped={}, errors={}",
+            classId, imported, skipped, errors.size());
         return new ImportResult(imported, skipped, errors);
     }
 

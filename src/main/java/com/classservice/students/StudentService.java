@@ -68,6 +68,7 @@ public class StudentService {
             .phone(req.phone())
             .parentPhone(req.parentPhone())
             .notes(req.notes())
+            .schoolName(req.schoolName())
             .createdAt(Instant.now())
             .build();
         return StudentDto.from(studentRepository.save(student));
@@ -89,6 +90,7 @@ public class StudentService {
         if (req.phone() != null) student.setPhone(req.phone());
         if (req.parentPhone() != null) student.setParentPhone(req.parentPhone());
         if (req.notes() != null) student.setNotes(req.notes());
+        if (req.schoolName() != null) student.setSchoolName(req.schoolName());
         return StudentDto.from(studentRepository.save(student));
     }
 
@@ -116,5 +118,10 @@ public class StudentService {
     @Transactional
     public ImportResult importStudents(MultipartFile file) {
         return excelImportService.importStudents(file);
+    }
+
+    @Transactional
+    public ImportResult importStudentsToClass(UUID classId, MultipartFile file) {
+        return excelImportService.importStudents(file, classId);
     }
 }
