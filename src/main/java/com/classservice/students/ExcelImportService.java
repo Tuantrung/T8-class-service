@@ -27,7 +27,7 @@ import java.util.UUID;
 
 /**
  * Parses .xlsx student roster files using Apache POI.
- * Expected columns (0-indexed): Full Name | Phone | Parent Phone | Notes
+ * Expected columns (0-indexed): Full Name | Phone | Parent Phone | Notes | School Name
  * Partial success: valid rows are saved even if some rows fail (BR-011).
  */
 @Slf4j
@@ -82,6 +82,7 @@ public class ExcelImportService {
                 String phone = getCellValue(row, 1);
                 String parentPhone = getCellValue(row, 2);
                 String notes = getCellValue(row, 3);
+                String schoolName = getCellValue(row, 4);
 
                 Student student = Student.builder()
                     .tenantId(tenantId)
@@ -89,6 +90,7 @@ public class ExcelImportService {
                     .phone(phone)
                     .parentPhone(parentPhone)
                     .notes(notes)
+                    .schoolName(schoolName)
                     .createdAt(Instant.now())
                     .build();
                 studentRepository.save(student);
@@ -138,6 +140,7 @@ public class ExcelImportService {
                 String phone = getCellValue(row, 1);
                 String parentPhone = getCellValue(row, 2);
                 String notes = getCellValue(row, 3);
+                String schoolName = getCellValue(row, 4);
 
                 Student student = Student.builder()
                     .tenantId(tenantId)
@@ -145,6 +148,7 @@ public class ExcelImportService {
                     .phone(phone)
                     .parentPhone(parentPhone)
                     .notes(notes)
+                    .schoolName(schoolName)
                     .createdAt(Instant.now())
                     .build();
                 Student saved = studentRepository.save(student);
@@ -170,7 +174,7 @@ public class ExcelImportService {
 
     /**
      * Generate an empty .xlsx template with header row only.
-     * Columns: Full Name | Phone | Parent Phone | Notes
+     * Columns: Full Name | Phone | Parent Phone | Notes | School Name
      *
      * @return byte array of the generated .xlsx file
      */
@@ -179,7 +183,7 @@ public class ExcelImportService {
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Students");
             Row header = sheet.createRow(0);
-            String[] columns = {"Full Name", "Phone", "Parent Phone", "Notes"};
+            String[] columns = {"Full Name", "Phone", "Parent Phone", "Notes", "School Name"};
             for (int i = 0; i < columns.length; i++) {
                 Cell cell = header.createCell(i);
                 cell.setCellValue(columns[i]);
@@ -221,7 +225,7 @@ public class ExcelImportService {
      * @return true if the row is blank
      */
     private boolean isBlankRow(Row row) {
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 5; i++) {
             Cell cell = row.getCell(i);
             if (cell == null) continue;
             if (cell.getCellType() == CellType.STRING && !cell.getStringCellValue().isBlank()) return false;
