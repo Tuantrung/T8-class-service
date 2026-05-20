@@ -11,5 +11,6 @@ public record CreateSessionRequest(
     @NotNull LocalDate sessionDate,
     LocalTime startTime,
     LocalTime endTime,
-    String topic
+    String topic,
+    Boolean cancelledByTeacher
 ) {}

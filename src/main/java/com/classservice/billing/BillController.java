@@ -1,5 +1,6 @@
 package com.classservice.billing;
 
+import com.classservice.billing.dto.BillDetailDto;
 import com.classservice.billing.dto.BillDto;
 import com.classservice.billing.dto.GenerateBillsRequest;
 import com.classservice.billing.dto.GenerateBillsResult;
@@ -14,16 +15,16 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -45,8 +46,8 @@ public class BillController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<BillDto>> get(@PathVariable UUID id) {
-        return ResponseEntity.ok(ApiResponse.ok(billService.getBill(id)));
+    public ResponseEntity<ApiResponse<BillDetailDto>> get(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(billService.getBillDetail(id)));
     }
 
     @PostMapping("/generate")
@@ -54,42 +55,43 @@ public class BillController {
         return ResponseEntity.ok(ApiResponse.ok(billService.generateBills(req)));
     }
 
-    @PutMapping("/{id}/status")
+    @PatchMapping("/{id}/status")
     public ResponseEntity<ApiResponse<BillDto>> updateStatus(@PathVariable UUID id,
-                                                               @Valid @RequestBody UpdateBillStatusRequest req) {
+                                                              @Valid @RequestBody UpdateBillStatusRequest req) {
         return ResponseEntity.ok(ApiResponse.ok(billService.updateStatus(id, req)));
     }
 
     @GetMapping("/{id}/pdf")
     public ResponseEntity<byte[]> downloadPdf(@PathVariable UUID id) {
-        BillDto bill = billService.getBill(id);
+        BillDetailDto bill = billService.getBillDetail(id);
         byte[] pdf = pdfExportService.generateBillPdf(bill);
+        String filename = "hoc-phi-" + bill.billingMonth() + "-" + bill.studentName().replaceAll("\\s+", "-") + ".pdf";
         return ResponseEntity.ok()
             .contentType(MediaType.APPLICATION_PDF)
-            .header(HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"bill-" + bill.billingMonth() + "-" + bill.studentId() + ".pdf\"")
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
             .body(pdf);
     }
 
-    /**
-     * Export all bills for a given month as a ZIP of PDFs.
-     * Uses StreamingResponseBody to avoid buffering the entire ZIP in memory.
-     */
     @GetMapping("/export")
     public ResponseEntity<StreamingResponseBody> exportZip(
-            @RequestParam String month) {
-        // month format: YYYY-MM
+            @RequestParam String month,
+            @RequestParam(required = false) UUID classId) {
+        List<BillDto> bills = billService.listBillsByMonth(month, classId);
         StreamingResponseBody body = outputStream -> {
             try (ZipOutputStream zip = new ZipOutputStream(outputStream)) {
-                // TODO: filter bills by month in Track 3
-                // Placeholder: iterate bills and add PDF entries
-            } catch (IOException ex) {
-                throw new RuntimeException("ZIP export failed", ex);
+                for (BillDto bill : bills) {
+                    BillDetailDto detail = billService.getBillDetail(bill.id());
+                    byte[] pdf = pdfExportService.generateBillPdf(detail);
+                    String entryName = detail.studentName().replaceAll("\\s+", "-") + "-" + month + ".pdf";
+                    zip.putNextEntry(new ZipEntry(entryName));
+                    zip.write(pdf);
+                    zip.closeEntry();
+                }
             }
         };
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType("application/zip"))
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"bills-" + month + ".zip\"")
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"hoc-phi-" + month + ".zip\"")
             .body(body);
     }
 }

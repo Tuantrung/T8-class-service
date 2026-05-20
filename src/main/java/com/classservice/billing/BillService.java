@@ -2,17 +2,20 @@ package com.classservice.billing;
 
 import com.classservice.attendance.AttendanceRepository;
 import com.classservice.attendance.AttendanceStatus;
+import com.classservice.billing.dto.BillDetailDto;
 import com.classservice.billing.dto.BillDto;
 import com.classservice.billing.dto.GenerateBillsRequest;
 import com.classservice.billing.dto.GenerateBillsResult;
 import com.classservice.billing.dto.UpdateBillStatusRequest;
 import com.classservice.classes.ClassRepository;
 import com.classservice.classes.ClassStudentRepository;
+import com.classservice.students.StudentRepository;
 import com.classservice.classes.TutoringClass;
 import com.classservice.common.PageResponse;
 import com.classservice.common.TenantContext;
 import com.classservice.common.exception.BillAlreadyIssuedException;
 import com.classservice.common.exception.EntityNotFoundException;
+import com.classservice.sessions.Session;
 import com.classservice.sessions.SessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +27,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +40,7 @@ public class BillService {
     private final ClassStudentRepository classStudentRepository;
     private final SessionRepository sessionRepository;
     private final AttendanceRepository attendanceRepository;
+    private final StudentRepository studentRepository;
 
     public PageResponse<BillDto> listBills(Pageable pageable) {
         UUID tenantId = TenantContext.get();
@@ -46,6 +52,70 @@ public class BillService {
         return billRepository.findByIdAndTenantId(billId, tenantId)
             .map(BillDto::from)
             .orElseThrow(() -> new EntityNotFoundException("Bill", billId));
+    }
+
+    public BillDetailDto getBillDetail(UUID billId) {
+        UUID tenantId = TenantContext.get();
+        Bill bill = billRepository.findByIdAndTenantId(billId, tenantId)
+            .orElseThrow(() -> new EntityNotFoundException("Bill", billId));
+
+        String studentName = studentRepository.findByIdAndTenantId(bill.getStudentId(), tenantId)
+            .map(s -> s.getFullName())
+            .orElse(bill.getStudentId().toString());
+
+        String className = classRepository.findByIdAndTenantId(bill.getClassId(), tenantId)
+            .map(c -> c.getName())
+            .orElse(bill.getClassId().toString());
+
+        LocalDate monthStart = bill.getBillingMonth();
+        LocalDate monthEnd = monthStart.withDayOfMonth(monthStart.lengthOfMonth());
+        List<Session> sessions = sessionRepository.findByClassIdAndSessionDateBetween(
+            bill.getClassId(), monthStart, monthEnd);
+
+        List<UUID> sessionIds = sessions.stream().map(Session::getId).toList();
+        Map<UUID, AttendanceStatus> attendanceMap = attendanceRepository
+            .findByStudentIdAndSessionIdIn(bill.getStudentId(), sessionIds)
+            .stream()
+            .collect(Collectors.toMap(a -> a.getSessionId(), a -> a.getStatus()));
+
+        List<BillDetailDto.SessionLineItem> lineItems = sessions.stream()
+            .map(s -> new BillDetailDto.SessionLineItem(
+                s.getId(),
+                s.getSessionDate(),
+                s.getTopic(),
+                attendanceMap.getOrDefault(s.getId(), AttendanceStatus.ABSENT) == AttendanceStatus.PRESENT
+                    || attendanceMap.getOrDefault(s.getId(), AttendanceStatus.ABSENT) == AttendanceStatus.LATE,
+                s.isCancelledByTeacher()
+            ))
+            .toList();
+
+        String billingMonthStr = bill.getBillingMonth().getYear() + "-"
+            + String.format("%02d", bill.getBillingMonth().getMonthValue());
+
+        return new BillDetailDto(
+            bill.getId(),
+            bill.getStudentId().toString(),
+            studentName,
+            bill.getClassId().toString(),
+            className,
+            billingMonthStr,
+            bill.getSessionsTotal(),
+            bill.getSessionsAttended(),
+            bill.getRatePerSession(),
+            bill.getTotalAmount(),
+            bill.getStatus(),
+            lineItems,
+            bill.getCreatedAt()
+        );
+    }
+
+    public List<BillDto> listBillsByMonth(String month, UUID classId) {
+        UUID tenantId = TenantContext.get();
+        LocalDate billingMonth = LocalDate.parse(month + "-01");
+        List<Bill> bills = classId != null
+            ? billRepository.findByTenantIdAndClassIdAndBillingMonth(tenantId, classId, billingMonth)
+            : billRepository.findByTenantIdAndBillingMonth(tenantId, billingMonth);
+        return bills.stream().map(BillDto::from).toList();
     }
 
     /**
@@ -88,16 +158,14 @@ public class BillService {
                 continue;
             }
 
-            long attended = 0;
-            if (!nonCancelledSessionIds.isEmpty()) {
-                attended = attendanceRepository
+            final long attended = nonCancelledSessionIds.isEmpty() ? 0L :
+                attendanceRepository
                     .findByStudentIdAndSessionIdIn(studentId, nonCancelledSessionIds)
                     .stream()
                     .filter(a -> a.getStatus() == AttendanceStatus.PRESENT || a.getStatus() == AttendanceStatus.LATE)
                     .count();
-            }
 
-            BigDecimal totalAmount = tc.getRatePerSession().multiply(BigDecimal.valueOf(attended));
+            final BigDecimal totalAmount = tc.getRatePerSession().multiply(BigDecimal.valueOf(attended));
 
             Bill bill = existing.map(b -> {
                 b.setSessionsTotal(nonCancelledSessions.size());

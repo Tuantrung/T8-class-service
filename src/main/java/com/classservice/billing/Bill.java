@@ -10,7 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,7 +24,7 @@ import java.util.UUID;
 @Table(name = "bill")
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Bill extends TenantEntity {
@@ -56,7 +56,7 @@ public class Bill extends TenantEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
+    
     private BillStatus status = BillStatus.DRAFT;
 
     @Column(name = "pdf_path")

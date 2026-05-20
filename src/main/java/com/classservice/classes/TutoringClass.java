@@ -10,7 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,7 +27,7 @@ import java.util.UUID;
 @Table(name = "class")
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class TutoringClass extends TenantEntity {
@@ -49,7 +49,7 @@ public class TutoringClass extends TenantEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
+    
     private ClassStatus status = ClassStatus.ACTIVE;
 
     @Column(name = "created_at", nullable = false, updatable = false)

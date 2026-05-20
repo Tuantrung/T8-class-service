@@ -2,16 +2,22 @@ import apiClient from '../client'
 import type { ApiResponse, CommentDto } from '../types'
 
 export const commentsApi = {
-  getBySession: (sessionId: string) =>
+  getBySession: (sessionId: string, studentId?: string) =>
     apiClient
-      .get<ApiResponse<CommentDto[]>>(`/api/sessions/${sessionId}/comments`)
+      .get<ApiResponse<CommentDto[]>>('/api/comments', {
+        params: { sessionId, studentId },
+      })
       .then((r) => r.data.data),
 
-  upsert: (sessionId: string, studentId: string, body: string) =>
+  create: (sessionId: string, studentId: string, body: string) =>
     apiClient
-      .put<ApiResponse<CommentDto>>(`/api/sessions/${sessionId}/comments/${studentId}`, { body })
+      .post<ApiResponse<CommentDto>>('/api/comments', { sessionId, studentId, body })
       .then((r) => r.data.data),
 
-  delete: (sessionId: string, commentId: string) =>
-    apiClient.delete(`/api/sessions/${sessionId}/comments/${commentId}`),
+  update: (commentId: string, body: string) =>
+    apiClient
+      .put<ApiResponse<CommentDto>>(`/api/comments/${commentId}`, { body })
+      .then((r) => r.data.data),
+
+  delete: (commentId: string) => apiClient.delete(`/api/comments/${commentId}`),
 }

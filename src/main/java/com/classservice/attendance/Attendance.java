@@ -10,7 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,7 +22,7 @@ import java.util.UUID;
 @Table(name = "attendance")
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Attendance extends TenantEntity {
@@ -39,7 +39,7 @@ public class Attendance extends TenantEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
+    
     private AttendanceStatus status = AttendanceStatus.PRESENT;
 
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -94,10 +94,14 @@ public class AuthService {
         userRepository.save(user);
     }
 
+    /**
+     * List all users belonging to the given tenant.
+     *
+     * @param tenantId the tenant to filter by
+     * @return list of UserDto for the tenant
+     */
     public List<UserDto> listUsers(UUID tenantId) {
-        // TODO: add findAllByTenantId query to UserRepository
-        return userRepository.findAll().stream()
-            .filter(u -> tenantId.equals(u.getTenantId()))
+        return userRepository.findAllByTenantId(tenantId).stream()
             .map(UserDto::from)
             .toList();
     }

@@ -53,8 +53,14 @@ export interface ClassDto {
   name: string
   subject?: string
   teacherId: string
+  teacher?: {
+    id: string
+    fullName: string
+    email: string
+  }
   ratePerSession: number
   status: ClassStatus
+  studentCount?: number
   createdAt: string
 }
 
@@ -65,10 +71,18 @@ export interface CreateClassRequest {
   ratePerSession: number
 }
 
+export interface UpdateClassRequest {
+  name: string
+  subject?: string
+  teacherId: string
+  ratePerSession: number
+  status: ClassStatus
+}
+
 // Students
 export interface StudentDto {
   id: string
-  tenantId: string
+  tenantId?: string
   fullName: string
   phone?: string
   parentPhone?: string
@@ -84,26 +98,46 @@ export interface CreateStudentRequest {
 }
 
 export interface ImportError {
-  rowNumber: number
+  row: number
   message: string
 }
 
 export interface ImportResult {
-  imported: StudentDto[]
+  imported: number
+  skipped: number
   errors: ImportError[]
 }
 
 // Sessions
 export interface SessionDto {
   id: string
-  tenantId: string
+  tenantId?: string
   classId: string
+  className?: string
   sessionDate: string
   startTime?: string
   endTime?: string
   topic?: string
   cancelledByTeacher: boolean
+  attendanceCount?: number
+  totalStudents?: number
   createdAt: string
+}
+
+export interface SessionDetailDto extends SessionDto {
+  attendance: {
+    studentId: string
+    studentName: string
+    status: AttendanceStatus
+  }[]
+  comments: {
+    studentId: string
+    studentName: string
+    body: string
+    authorId: string
+    authorName: string
+    updatedAt: string
+  }[]
 }
 
 export interface CreateSessionRequest {
@@ -112,6 +146,15 @@ export interface CreateSessionRequest {
   startTime?: string
   endTime?: string
   topic?: string
+  cancelledByTeacher?: boolean
+}
+
+export interface UpdateSessionRequest {
+  sessionDate: string
+  startTime?: string
+  endTime?: string
+  topic?: string
+  cancelledByTeacher: boolean
 }
 
 // Attendance
@@ -121,6 +164,7 @@ export interface AttendanceDto {
   id: string
   sessionId: string
   studentId: string
+  studentName?: string
   status: AttendanceStatus
 }
 
@@ -130,6 +174,7 @@ export interface AttendanceRecord {
 }
 
 export interface BulkAttendanceRequest {
+  sessionId: string
   records: AttendanceRecord[]
 }
 
@@ -138,7 +183,9 @@ export interface CommentDto {
   id: string
   sessionId: string
   studentId: string
+  studentName?: string
   authorId: string
+  authorName?: string
   body: string
   createdAt: string
   updatedAt: string
@@ -149,10 +196,12 @@ export interface GradeDto {
   id: string
   classId: string
   studentId: string
+  studentName?: string
   examName: string
   examDate?: string
   score?: number
   maxScore?: number
+  percentage?: number
   notes?: string
   createdAt: string
 }
@@ -172,9 +221,11 @@ export type BillStatus = 'DRAFT' | 'ISSUED' | 'PAID'
 
 export interface BillDto {
   id: string
-  tenantId: string
+  tenantId?: string
   studentId: string
+  studentName?: string
   classId: string
+  className?: string
   billingMonth: string
   sessionsTotal: number
   sessionsAttended: number
@@ -185,14 +236,25 @@ export interface BillDto {
   updatedAt: string
 }
 
+export interface BillDetailDto extends BillDto {
+  sessions: {
+    sessionId: string
+    sessionDate: string
+    topic?: string
+    cancelledByTeacher: boolean
+    attendanceStatus: AttendanceStatus | null
+    countedInBill: boolean
+  }[]
+}
+
 export interface GenerateBillsRequest {
   classId: string
-  month: string  // YYYY-MM
+  month: string // YYYY-MM
 }
 
 export interface GenerateBillsResult {
   generated: number
-  skipped: number
+  month: string
+  classId: string
   bills: BillDto[]
-  skipReasons: string[]
 }

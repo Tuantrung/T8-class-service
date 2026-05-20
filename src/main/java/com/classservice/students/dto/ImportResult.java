@@ -2,7 +2,11 @@ package com.classservice.students.dto;
 
 import java.util.List;
 
+/**
+ * Result of a student Excel import operation.
+ */
 public record ImportResult(
-    List<StudentDto> imported,
+    int imported,
+    int skipped,
     List<ImportError> errors
 ) {}

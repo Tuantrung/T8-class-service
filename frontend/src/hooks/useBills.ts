@@ -1,12 +1,18 @@
-// TODO Track 6: Implement billing hooks
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { billsApi } from '../api/endpoints/bills'
-import type { GenerateBillsRequest } from '../api/types'
+import type { BillStatus, GenerateBillsRequest } from '../api/types'
 
-export function useBills(page = 0, size = 20) {
+export function useBills(params?: {
+  classId?: string
+  month?: string
+  status?: string
+  page?: number
+  size?: number
+}) {
   return useQuery({
-    queryKey: ['bills', { page, size }],
-    queryFn: () => billsApi.list(page, size),
+    queryKey: ['bills', params],
+    queryFn: () => billsApi.list(params),
+    enabled: !!params?.month,
   })
 }
 
@@ -29,7 +35,11 @@ export function useGenerateBills() {
 export function useUpdateBillStatus() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) => billsApi.updateStatus(id, status),
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['bill', vars.id] }),
+    mutationFn: ({ id, status }: { id: string; status: BillStatus }) =>
+      billsApi.updateStatus(id, status),
+    onSuccess: (_result, vars) => {
+      qc.invalidateQueries({ queryKey: ['bills'] })
+      qc.invalidateQueries({ queryKey: ['bill', vars.id] })
+    },
   })
 }

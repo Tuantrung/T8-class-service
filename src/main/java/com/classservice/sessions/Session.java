@@ -8,7 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,7 +22,7 @@ import java.util.UUID;
 @Table(name = "session")
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Session extends TenantEntity {
@@ -46,7 +46,7 @@ public class Session extends TenantEntity {
     private String topic;
 
     @Column(name = "cancelled_by_teacher", nullable = false)
-    @Builder.Default
+    
     private boolean cancelledByTeacher = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)
