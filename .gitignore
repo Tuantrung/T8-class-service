@@ -1,25 +1,55 @@
-/target/
+# ── Maven ─────────────────────────────────────────────────────────────────────
+target/
 !.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
+# ── IDEs ──────────────────────────────────────────────────────────────────────
+.idea/
 *.iws
 *.iml
 *.ipr
-
-### NetBeans ###
+.classpath
+.project
+.settings/
+.factorypath
+.springBeans
+.sts4-cache
+.apt_generated
 /nbproject/private/
 /build/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
+
+# ── Environment ───────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ── Frontend ──────────────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.env
+frontend/.env.local
+frontend/coverage/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+# (docker-compose.yml is tracked; .env is not)
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── PDF exports ───────────────────────────────────────────────────────────────
+/tmp/

@@ -1,0 +1,70 @@
+package com.classservice.billing;
+
+import com.classservice.common.TenantEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Entity
+@Table(name = "bill")
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Bill extends TenantEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(name = "student_id", nullable = false)
+    private UUID studentId;
+
+    @Column(name = "class_id", nullable = false)
+    private UUID classId;
+
+    @Column(name = "billing_month", nullable = false)
+    private LocalDate billingMonth;   // stored as first day of month: 2024-03-01
+
+    @Column(name = "sessions_total", nullable = false)
+    private int sessionsTotal;
+
+    @Column(name = "sessions_attended", nullable = false)
+    private int sessionsAttended;
+
+    @Column(name = "rate_per_session", nullable = false)
+    private BigDecimal ratePerSession;
+
+    @Column(name = "total_amount", nullable = false)
+    private BigDecimal totalAmount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    
+    private BillStatus status = BillStatus.DRAFT;
+
+    @Column(name = "pdf_path")
+    private String pdfPath;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+}

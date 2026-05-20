@@ -1,0 +1,12 @@
+spring:
+  jpa:
+    show-sql: false
+  flyway:
+    locations: classpath:db/migration
+    # V6 is dev seed data only — excluded in production
+    out-of-order: false
+
+logging:
+  level:
+    com.classservice: INFO
+    root: WARN
