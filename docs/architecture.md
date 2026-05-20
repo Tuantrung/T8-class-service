@@ -240,6 +240,7 @@ CREATE TABLE student (
     phone         VARCHAR(50),
     parent_phone  VARCHAR(50),
     notes         TEXT,
+    school_name   VARCHAR(255),          -- added V6 migration
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_student_tenant ON student(tenant_id);
@@ -255,15 +256,16 @@ CREATE INDEX idx_class_student_student ON class_student(student_id);
 
 -- Sessions (a scheduled meeting of a class)
 CREATE TABLE session (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id       UUID NOT NULL REFERENCES tenant(id),
-    class_id        UUID NOT NULL REFERENCES class(id),
-    session_date    DATE NOT NULL,
-    start_time      TIME,
-    end_time        TIME,
-    topic           TEXT,
+    id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id            UUID NOT NULL REFERENCES tenant(id),
+    class_id             UUID NOT NULL REFERENCES class(id),
+    session_date         DATE NOT NULL,
+    start_time           TIME,
+    end_time             TIME,
+    topic                TEXT,
+    progress_notes       TEXT,           -- teaching content description, added V6 migration
     cancelled_by_teacher BOOLEAN NOT NULL DEFAULT false,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at           TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_session_tenant ON session(tenant_id);
 CREATE INDEX idx_session_class ON session(class_id);
@@ -345,7 +347,7 @@ Flyway classpath migration files under `src/main/resources/db/migration/`:
 - `V3__create_sessions_and_attendance.sql`
 - `V4__create_comments_and_grades.sql`
 - `V5__create_bills.sql`
-- `V6__seed_dev_data.sql` (dev profile only, guarded by Spring profile)
+- `V6__add_progress_notes_and_school_name.sql` — `ALTER TABLE session ADD COLUMN progress_notes TEXT` + `ALTER TABLE student ADD COLUMN school_name VARCHAR(255)`
 
 ---
 
@@ -385,10 +387,10 @@ POST /api/auth/login
 
 | Role | Capabilities |
 |---|---|
-| ADMIN | All operations within their tenant; user management |
-| TEACHER | Read/write own classes, sessions, attendance, comments, grades; read students |
+| ADMIN | All operations within their tenant; user management; billing (exclusive) |
+| TEACHER | Read/write own classes, sessions, attendance, comments, grades; read students. **No access to `/api/bills/**`** |
 
-Spring `@PreAuthorize` annotations enforce role checks at service layer.
+Spring `@PreAuthorize` annotations enforce role checks at controller layer. `BillController` carries a class-level `@PreAuthorize("hasRole('ADMIN')")`. Frontend hides billing nav link and class billing tab based on `user.role` from Zustand `authStore`; the `AdminGuard` route wrapper also prevents direct URL access.
 
 ### Token storage
 
