@@ -13,6 +13,7 @@ function getCurrentMonth() {
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user)
+  const isAdmin = user?.role === 'ADMIN'
   const currentMonth = getCurrentMonth()
 
   const { data: classesData, isLoading: loadingClasses } = useQuery({
@@ -28,10 +29,10 @@ export default function DashboardPage() {
   const { data: billsData, isLoading: loadingBills } = useQuery({
     queryKey: ['bills', { month: currentMonth, status: 'DRAFT', page: 0, size: 1 }],
     queryFn: () => billsApi.list({ month: currentMonth, status: 'DRAFT', page: 0, size: 1 }),
-    enabled: true,
+    enabled: isAdmin,
   })
 
-  const isLoading = loadingClasses || loadingStudents || loadingBills
+  const isLoading = loadingClasses || loadingStudents || (isAdmin && loadingBills)
 
   if (isLoading) return <PageSpinner />
 
@@ -59,12 +60,14 @@ export default function DashboardPage() {
           href="/students"
           color="green"
         />
-        <StatCard
-          label="Học phí chờ xử lý"
-          value={billsData?.totalElements ?? 0}
-          href="/billing"
-          color="yellow"
-        />
+        {isAdmin && (
+          <StatCard
+            label="Học phí chờ xử lý"
+            value={billsData?.totalElements ?? 0}
+            href="/billing"
+            color="yellow"
+          />
+        )}
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
@@ -82,12 +85,14 @@ export default function DashboardPage() {
           >
             Danh sách học sinh
           </Link>
-          <Link
-            to="/billing"
-            className="px-4 py-2 bg-yellow-50 text-yellow-700 rounded-md text-sm font-medium hover:bg-yellow-100 transition-colors"
-          >
-            Quản lý học phí
-          </Link>
+          {isAdmin && (
+            <Link
+              to="/billing"
+              className="px-4 py-2 bg-yellow-50 text-yellow-700 rounded-md text-sm font-medium hover:bg-yellow-100 transition-colors"
+            >
+              Quản lý học phí
+            </Link>
+          )}
         </div>
       </div>
     </div>
